@@ -430,7 +430,7 @@ function render(){
   if(!story&&!lineup&&!hasOff&&!media&&!cnote)club='<span class="empty-state">Club section not yet completed</span>';
 
   $('doc').innerHTML=
-    '<div class="doc-hd"><div class="doc-logo-area">'+logoHtml+'</div><div class="doc-title"><div class="doc-title-main">News &amp; Notes</div><div class="doc-title-sub">Ontario Hockey League</div></div><div class="doc-hd-right"><div class="doc-date">'+fmtDate+'</div><div class="doc-season">2026&ndash;27 Regular Season</div></div></div>'
+    '<div class="doc-hd"><div class="doc-logo-area">'+logoHtml+'</div><div class="doc-title"><div class="doc-title-main">News &amp; Notes</div><div class="doc-title-sub">Ontario Hockey League</div></div><div class="doc-hd-right"><div class="doc-date">'+fmtDate+'</div></div></div>'
     +'<div class="doc-matchup"><div class="doc-team"><div class="doc-team-lbl">Visiting</div><div class="doc-team-name">'+away+'</div>'+(awayRec?'<div class="doc-team-rec">('+awayRec+')</div>':'')+'</div><div class="doc-vs">AT</div><div class="doc-team"><div class="doc-team-lbl">Home</div><div class="doc-team-name">'+home+'</div>'+(homeRec?'<div class="doc-team-rec">('+homeRec+')</div>':'')+'</div></div>'
     +(infoItems?'<div class="doc-info">'+infoItems+'</div>':'')
     +'<div class="doc-body"><div class="doc-col">'
@@ -442,6 +442,7 @@ function render(){
     +'<div class="doc-sec-hd sec-gap">OHL Birthdays <span class="badge">OHL</span></div>'+bdayBlock
     +'</div><div class="doc-col"><div class="doc-sec-hd">Tonight\'s Game <span class="badge dark">Club</span></div>'+club+'</div></div>'
     +'<div class="doc-ft"><span>OHL News &amp; Notes &middot; Prepared by OHL Communications</span><span>ontariohockeyleague.com</span></div>';
+  saveDrafts();
 }
 
 function switchTab(tab){
@@ -505,12 +506,53 @@ function clearLeague(){
     const c=$('rows-'+key);c.querySelectorAll('[data-row]').forEach(r=>r.remove());
     for(let i=0;i<ROWS[key].init;i++)addRow(key,false);
   });
+  try{localStorage.removeItem('ohl-nn-league');}catch(e){}
   render();
 }
 
 function clearClub(){
   ['f-away','f-away-rec','f-home','f-home-rec','f-time','f-arena','f-bcast','f-story','f-lineup','f-ref1','f-ref2','f-lin1','f-lin2','f-media','f-cnote'].forEach(id=>$(id).value='');
+  try{localStorage.removeItem('ohl-nn-club-'+(v('f-date')||'nodate'));}catch(e){}
   render();
+}
+
+// Draft persistence
+function clubDraftKey(){return'ohl-nn-club-'+(v('f-date')||'nodate');}
+function saveDrafts(){
+  try{
+    localStorage.setItem('ohl-nn-league',JSON.stringify(getLeagueData()));
+    localStorage.setItem(clubDraftKey(),JSON.stringify({
+      away:v('f-away'),awayRec:v('f-away-rec'),home:v('f-home'),homeRec:v('f-home-rec'),
+      time:v('f-time'),arena:v('f-arena'),bcast:v('f-bcast'),story:v('f-story'),
+      lineup:v('f-lineup'),ref1:v('f-ref1'),ref2:v('f-ref2'),lin1:v('f-lin1'),
+      lin2:v('f-lin2'),media:v('f-media'),cnote:v('f-cnote')
+    }));
+  }catch(e){}
+}
+function loadLeagueDraft(){
+  try{
+    const raw=localStorage.getItem('ohl-nn-league');if(!raw)return;
+    const d=JSON.parse(raw);
+    if(d.date)$('f-date').value=d.date;
+    if(d.ldrs?.length)populateRows('ldrs',d.ldrs);
+    if(d.yest?.length)populateRows('yest',d.yest);
+    if(d.sched)$('f-sched').value=d.sched;
+    if(d.news?.length)populateRows('news',d.news);
+    if(d.alumni?.length)populateRows('alumni',d.alumni);
+    if(d.bdayP?.length)populateRows('bdayP',d.bdayP);
+    if(d.bdayA?.length)populateRows('bdayA',d.bdayA);
+  }catch(e){}
+}
+function loadClubDraft(){
+  try{
+    const raw=localStorage.getItem(clubDraftKey());if(!raw)return;
+    const d=JSON.parse(raw);
+    const set=(id,val)=>{if(val&&$(id))$(id).value=val;};
+    set('f-away',d.away);set('f-away-rec',d.awayRec);set('f-home',d.home);set('f-home-rec',d.homeRec);
+    set('f-time',d.time);set('f-arena',d.arena);set('f-bcast',d.bcast);set('f-story',d.story);
+    set('f-lineup',d.lineup);set('f-ref1',d.ref1);set('f-ref2',d.ref2);
+    set('f-lin1',d.lin1);set('f-lin2',d.lin2);set('f-media',d.media);set('f-cnote',d.cnote);
+  }catch(e){}
 }
 
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
@@ -518,7 +560,13 @@ function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('sho
 window.addEventListener('DOMContentLoaded',()=>{
   $('f-date').value=new Date().toISOString().split('T')[0];
   initAllRows();
-  loadHash();
+  if(location.hash){
+    loadHash();
+    loadClubDraft();
+  }else{
+    loadLeagueDraft();
+    loadClubDraft();
+  }
   render();
 });
 </script>
