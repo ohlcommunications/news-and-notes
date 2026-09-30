@@ -214,6 +214,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
   .bday-cat{margin:4px 0 2px}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -323,6 +324,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
           <div style="display:flex;gap:6px">
             <button class="sc-photo-btn" onclick="document.getElementById('sc-file-input').click()">Choose Photo</button>
             <button class="sc-photo-btn" id="sc-remove-btn" style="display:none" onclick="removeSocialPhoto()">Remove</button>
+            <button class="sc-photo-btn" onclick="downloadCard()" style="background:var(--blue);color:#fff;font-weight:700">⬇ Download Card</button>
           </div>
         </div>
         <div class="social-card" id="social-card"></div>
@@ -506,9 +508,9 @@ function render(){
     +(()=>{const rr=getRows('yest').map(r=>{const ins=rowInputs(r);return{score:ins[0]?.value||'',note:ins[1]?.value||''};}).filter(r=>r.score);return rr.length?"<div class='doc-sec-hd sec-gap'>Yesterday's Results <span class='badge'>OHL</span></div>"+rr.map(r=>'<div class="result-entry"><div class="result-score">'+esc(r.score)+'</div>'+(r.note?'<div class="result-note">'+esc(r.note)+'</div>':'')+'</div>').join(''):'';;})()
     +"<div class='doc-sec-hd sec-gap'>Today's Schedule <span class='badge'>OHL</span></div>"+schedLines(v('f-sched'))
     +'<div class="doc-sec-hd sec-gap">League News <span class="badge">OHL</span></div>'+newsHtml
-    +'<div class="doc-sec-hd sec-gap">Alumni News <span class="badge">OHL</span></div>'+alumniHtml
+    +(hasAlumni?'<div class="doc-sec-hd sec-gap">Alumni News <span class="badge">OHL</span></div>'+alumniHtml:'')
     +(v('f-history')?'<div class="doc-sec-hd sec-gap">On This Day in OHL History <span class="badge">OHL</span></div><div class="note-text">'+esc(v('f-history'))+'</div>':'')
-    +'<div class="doc-sec-hd sec-gap">OHL Birthdays <span class="badge">OHL</span></div>'+bdayBlock
+    +((hasBP||hasBA)?'<div class="doc-sec-hd sec-gap">OHL Birthdays <span class="badge">OHL</span></div>'+bdayBlock:'')
     +'</div><div class="doc-col"><div class="doc-sec-hd">Tonight\'s Game <span class="badge dark">Club</span></div>'+club+'</div></div>'
     +'<div class="doc-ft"><span>OHL News &amp; Notes &middot; Prepared by OHL Communications</span><span>ontariohockeyleague.com</span></div>';
   if(currentView==='social')renderSocial();
@@ -649,6 +651,20 @@ function removeSocialPhoto(){
   $('sc-remove-btn').style.display='none';
   $('sc-file-input').value='';
   renderSocial();
+}
+function downloadCard(){
+  const card=$('social-card');
+  if(!card||!window.html2canvas){alert('Download not available — please wait for the page to fully load.');return;}
+  const btn=event.target;
+  btn.textContent='Saving…';btn.disabled=true;
+  html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false}).then(canvas=>{
+    const link=document.createElement('a');
+    const d=v('f-date')||new Date().toISOString().slice(0,10);
+    link.download='ohl-daily-brief-'+d+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent='⬇ Download Card';btn.disabled=false;
+  }).catch(()=>{btn.textContent='⬇ Download Card';btn.disabled=false;alert('Export failed — try again.');});
 }
 function switchView(v){
   currentView=v;
