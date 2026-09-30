@@ -127,6 +127,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
 .view-btn.active{background:#fff;color:var(--dark)}
 .social-wrap{display:none;flex:1;overflow-y:auto;padding:24px;justify-content:center;align-items:flex-start;background:#999}
 .social-wrap.active{display:flex}
+.hist-wrap{display:none;flex:1;overflow-y:auto;padding:24px;justify-content:center;align-items:flex-start;background:#555}
+.hist-wrap.active{display:flex}
 .preview-wrap.hidden{display:none}
 .social-card{width:480px;min-height:600px;background:var(--dark);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column}
 .sc-header{background:var(--blue);padding:20px 24px;display:flex;align-items:center;gap:14px}
@@ -153,6 +155,24 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
 .sc-img-placeholder{width:100%;height:190px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.08)}
 .sc-img-placeholder span{font:600 10px system-ui;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.3)}
 .sc-photo-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:rgba(0,0,0,.2);flex-shrink:0}
+/* History card */
+.hc-card{width:480px;min-height:600px;background:var(--dark);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);font-family:system-ui,-apple-system,sans-serif;display:flex;flex-direction:column}
+.hc-header{background:var(--blue);padding:20px 24px;display:flex;align-items:center;gap:14px}
+.hc-eyebrow{font:700 8px/1 system-ui;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:6px}
+.hc-title{font:900 20px/1.1 system-ui;letter-spacing:.02em;text-transform:uppercase;color:#fff}
+.hc-logo{height:28px;width:auto;opacity:.9}
+.hc-img{width:100%;height:200px;object-fit:cover;display:block}
+.hc-img-pair{display:flex;height:200px}
+.hc-img-pair img{width:50%;object-fit:cover;display:block}
+.hc-img-pair img:first-child{border-right:2px solid var(--dark)}
+.hc-body{flex:1;padding:24px;display:flex;flex-direction:column;gap:0}
+.hc-year-lbl{font:700 9px/1 system-ui;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,133,202,.3)}
+.hc-year{font:900 48px/1 system-ui;color:var(--blue);margin-bottom:6px}
+.hc-ago{font:400 11px/1 system-ui;color:rgba(255,255,255,.4);margin-bottom:20px;letter-spacing:.04em}
+.hc-text{font:400 13px/1.65 system-ui;color:rgba(255,255,255,.88)}
+.hc-footer{background:rgba(0,0,0,.25);padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+.hc-footer-handle{font:700 11px/1 system-ui;letter-spacing:.05em;color:rgba(255,255,255,.45)}
+.hc-footer-league{font:600 9px/1 system-ui;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.25)}
 .sc-photo-label{font:600 9px system-ui;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.45)}
 .sc-photo-btn{background:rgba(255,255,255,.12);border:none;border-radius:3px;color:rgba(255,255,255,.65);font:600 9px system-ui;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;cursor:pointer}
 .sc-photo-btn:hover{background:rgba(255,255,255,.2)}
@@ -311,6 +331,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
       <div class="view-toggle">
         <button class="view-btn active" id="btn-sheet" onclick="switchView('sheet')">Club Sheet</button>
         <button class="view-btn" id="btn-social" onclick="switchView('social')">Social Card</button>
+        <button class="view-btn" id="btn-hist" onclick="switchView('hist')">History Card</button>
       </div>
       <button id="print-btn" onclick="window.print()">Print / Export PDF</button>
     </div>
@@ -330,6 +351,30 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#bbb}
         <div class="social-card" id="social-card"></div>
       </div>
       <input type="file" id="sc-file-input" accept="image/*" style="display:none" onchange="loadSocialPhoto(this)">
+    </div>
+    <div class="hist-wrap" id="hist-wrap">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:480px">
+        <div class="sc-photo-bar" style="width:100%;border-radius:6px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="sc-photo-label" style="width:52px">Photo 1</span>
+              <span class="sc-photo-label" id="hc-photo-name" style="color:rgba(255,255,255,.3)">None</span>
+              <button class="sc-photo-btn" onclick="document.getElementById('hc-file-input').click()">Choose</button>
+              <button class="sc-photo-btn" id="hc-remove-btn" style="display:none" onclick="removeHistPhoto()">Remove</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="sc-photo-label" style="width:52px">Photo 2</span>
+              <span class="sc-photo-label" id="hc-photo2-name" style="color:rgba(255,255,255,.3)">None</span>
+              <button class="sc-photo-btn" onclick="document.getElementById('hc-file-input2').click()">Choose</button>
+              <button class="sc-photo-btn" id="hc-remove-btn2" style="display:none" onclick="removeHistPhoto2()">Remove</button>
+            </div>
+          </div>
+          <button class="sc-photo-btn" onclick="downloadHistCard(event)" style="background:var(--blue);color:#fff;font-weight:700">⬇ Download</button>
+        </div>
+        <div class="hc-card" id="hist-card"></div>
+      </div>
+      <input type="file" id="hc-file-input" accept="image/*" style="display:none" onchange="loadHistPhoto(this)">
+      <input type="file" id="hc-file-input2" accept="image/*" style="display:none" onchange="loadHistPhoto2(this)">
     </div>
   </div>
 </div>
@@ -670,10 +715,72 @@ function switchView(v){
   currentView=v;
   $('preview-wrap').classList.toggle('hidden',v!=='sheet');
   $('social-wrap').classList.toggle('active',v==='social');
+  $('hist-wrap').classList.toggle('active',v==='hist');
   $('btn-sheet').classList.toggle('active',v==='sheet');
   $('btn-social').classList.toggle('active',v==='social');
+  $('btn-hist').classList.toggle('active',v==='hist');
   $('print-btn').style.display=v==='sheet'?'':'none';
   if(v==='social')renderSocial();
+  if(v==='hist')renderHistCard();
+}
+
+let histImgSrc=null,histImgSrc2=null;
+function loadHistPhoto(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{histImgSrc=e.target.result;$('hc-photo-name').textContent=file.name;$('hc-remove-btn').style.display='';renderHistCard();};
+  reader.readAsDataURL(file);
+}
+function removeHistPhoto(){
+  histImgSrc=null;$('hc-photo-name').textContent='None';$('hc-remove-btn').style.display='none';$('hc-file-input').value='';renderHistCard();
+}
+function loadHistPhoto2(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{histImgSrc2=e.target.result;$('hc-photo2-name').textContent=file.name;$('hc-remove-btn2').style.display='';renderHistCard();};
+  reader.readAsDataURL(file);
+}
+function removeHistPhoto2(){
+  histImgSrc2=null;$('hc-photo2-name').textContent='None';$('hc-remove-btn2').style.display='none';$('hc-file-input2').value='';renderHistCard();
+}
+function downloadHistCard(ev){
+  const card=$('hist-card');
+  if(!card||!window.html2canvas){alert('Download not available — please wait for the page to fully load.');return;}
+  const btn=ev.target;
+  btn.textContent='Saving…';btn.disabled=true;
+  html2canvas(card,{scale:3,useCORS:true,backgroundColor:null,logging:false}).then(canvas=>{
+    const link=document.createElement('a');
+    const d=v('f-date')||new Date().toISOString().slice(0,10);
+    link.download='ohl-history-'+d+'.png';
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent='⬇ Download Card';btn.disabled=false;
+  }).catch(()=>{btn.textContent='⬇ Download Card';btn.disabled=false;alert('Export failed — try again.');});
+}
+function renderHistCard(){
+  const logoImg=WHITE_LOGO_SRC?'<img class="hc-logo" src="'+WHITE_LOGO_SRC+'" alt="OHL">':LOGO_SRC?'<img class="hc-logo" src="'+LOGO_SRC+'" alt="OHL">':'<span style="font:900 18px system-ui;color:#fff">OHL</span>';
+  const raw=v('f-history').trim();
+  // Try to parse a year from the start of the text, e.g. "In 1994, ..." or "1994 —"
+  const yearMatch=raw.match(/\b(19\d{2}|20\d{2})\b/);
+  const year=yearMatch?yearMatch[1]:'';
+  const currentYear=new Date().getFullYear();
+  const yearsAgo=year?(currentYear-parseInt(year))+' years ago':'';
+  const dateObj=v('f-date')?new Date(v('f-date')+'T12:00:00'):new Date();
+  const dayMonth=dateObj.toLocaleDateString('en-CA',{month:'long',day:'numeric'});
+  const imgBlock=histImgSrc&&histImgSrc2
+    ?'<div class="hc-img-pair"><img src="'+histImgSrc+'" alt=""><img src="'+histImgSrc2+'" alt=""></div>'
+    :histImgSrc?'<img class="hc-img" src="'+histImgSrc+'" alt="">'
+    :histImgSrc2?'<img class="hc-img" src="'+histImgSrc2+'" alt="">'
+    :'';
+  const bodyText=raw?'<div class="hc-text">'+esc(raw)+'</div>':'<div style="font:italic 12px system-ui;color:rgba(255,255,255,.3);padding:12px 0">Enter history text in the League form</div>';
+  $('hist-card').innerHTML=
+    '<div class="hc-header">'+logoImg+'<div style="flex:1"><div class="hc-eyebrow">On This Day in OHL History</div><div class="hc-title">'+esc(dayMonth)+'</div></div></div>'
+   +imgBlock
+   +'<div class="hc-body">'
+   +(year?'<div class="hc-year-lbl">Year</div><div class="hc-year">'+esc(year)+'</div>'+(yearsAgo?'<div class="hc-ago">'+esc(yearsAgo)+'</div>':''):'')
+   +bodyText
+   +'</div>'
+   +'<div class="hc-footer"><span class="hc-footer-handle">@OHLprguy</span><span class="hc-footer-league">Ontario Hockey League</span></div>';
 }
 
 function renderSocial(){
